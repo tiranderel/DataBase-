@@ -1,4 +1,4 @@
-﻿#include <math.h>
+#include <math.h>
 #include <conio.h>
 #include <stdio.h>
 #include <locale.h>
@@ -10,6 +10,17 @@
 
 #pragma warning(disable: 4996)
 using namespace std;
+
+SOCKET podcluchenie;
+//принимает свои же сообщения с сервера нужна только для того чтобы было понятно что работает
+void priem(int index) {
+	char msg[256];
+	while (true) {
+		recv(podcluchenie, msg, sizeof(msg), NULL);
+		std::cout << msg << std::endl;
+	}
+}
+
 
 int main(int argc, char* argv[]) {
 
@@ -34,12 +45,29 @@ int main(int argc, char* argv[]) {
 	addr.sin_port = htons(stoi(port_s));
 	addr.sin_family = AF_INET;
 
-	SOCKET podcluchenie = socket(AF_INET, SOCK_STREAM, NULL);
+	podcluchenie = socket(AF_INET, SOCK_STREAM, NULL);
 	if(connect(podcluchenie, (SOCKADDR*)&addr, sizeof(addr)) != 0) {
 		std::cout << "oshibka podkluchenia k serveru\n";
 		return 1;
 	}
-	std::cout << "podkluchen\n";
+	std::cout << "connected\n";
+
+	char msg[256];
+	recv(podcluchenie, msg, sizeof(msg), NULL);
+	std::cout << msg << std::endl;
+
+	CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)priem, NULL, NULL, NULL);
+	
+	//отправляет сообщение на сервер в переменную msg
+	char msg1[256];
+	while (true) {
+		std::cin.getline(msg1, sizeof(msg1));
+		send(podcluchenie, msg1, sizeof(msg1), NULL);
+		Sleep(10);
+	}
+
+
+
 
 	system("pause");
 	return 0;
